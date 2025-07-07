@@ -363,3 +363,20 @@ input[type="number"]::-webkit-inner-spin-button {
     color: #F87171 !important;  
 }
 
+.total-display {
+    text-align: center;
+    padding: 15px 20px;
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: 700;
+    background: rgba(139, 69, 255, 0.1);
+    border-radius: 10px;
+}
+
+.total-positive {
+    color: #4ADE80;
+}
+
+.total-negative {
+    color: #F87171;
+}
