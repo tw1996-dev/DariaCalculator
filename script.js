@@ -54,7 +54,7 @@ function initializeEventListeners() {
         }
     });
     
-    // Input validation -
+    // Input validation
     document.getElementById('plusHours').addEventListener('input', validateIntegerInput);
     document.getElementById('plusMinutes').addEventListener('input', validateIntegerInput);
     document.getElementById('minusHours').addEventListener('input', validateIntegerInput);
@@ -99,12 +99,12 @@ function sortTable(column) {
                 valueB = b.name.toLowerCase();
                 break;
             case 'plus':
-                valueA = a.plus;
-                valueB = b.plus;
+                valueA = a.totalPlus;
+                valueB = b.totalPlus;
                 break;
             case 'minus':
-                valueA = a.minus;
-                valueB = b.minus;
+                valueA = a.totalMinus;
+                valueB = b.totalMinus;
                 break;
             case 'sum':
                 valueA = a.sum;
@@ -153,7 +153,6 @@ function updateSortIndicators() {
 }
 
 // ========== INPUT VALIDATION ==========
-
 function validateIntegerInput(e) {
     let value = e.target.value;
     
@@ -179,15 +178,25 @@ function updateFloatingLabels() {
     });
 }
 
-// ========== MINUTES CONVERSION ==========
-
-function convertHoursToMinutes(hours) {
-    const h = parseInt(hours) || 0;
-    return h * 60;
-}
-
-function convertSimpleMinutes(minutes) {
-    return parseInt(minutes) || 0;
+// ========== FORMAT FUNCTIONS ==========
+function formatHoursAndMinutes(hours, minutes, isNegative = false, isTotal = false) {
+    const sign = isNegative ? '-' : '';
+    let result = '';
+    
+    if (hours > 0) {
+        result += `${hours}t`;
+    }
+    
+    if (minutes > 0) {
+        if (hours > 0) result += ' ';
+        result += `${minutes}<span class="${isTotal ? 'min-suffix-total' : 'min-suffix'}">min</span>`;
+    }
+    
+    if (result === '') {
+        return '0';
+    }
+    
+    return sign + result;
 }
 
 // ========== ADD/EDIT PERSON LOGIC ==========
@@ -208,14 +217,10 @@ function addPerson() {
     
     // Get values
     let name = nameInput.value.trim();
-    const plusHours = convertHoursToMinutes(plusHoursInput.value);
-    const plusMinutes = convertSimpleMinutes(plusMinutesInput.value);
-    const minusHours = convertHoursToMinutes(minusHoursInput.value);
-    const minusMinutes = convertSimpleMinutes(minusMinutesInput.value);
-    
-    // Calculate totals
-    const totalPlusMinutes = plusHours + plusMinutes;
-    const totalMinusMinutes = minusHours + minusMinutes;
+    const plusHours = parseInt(plusHoursInput.value) || 0;
+    const plusMinutes = parseInt(plusMinutesInput.value) || 0;
+    const minusHours = parseInt(minusHoursInput.value) || 0;
+    const minusMinutes = parseInt(minusMinutesInput.value) || 0;
     
     // Auto-generate name if empty
     if (!name) {
@@ -226,18 +231,22 @@ function addPerson() {
         name = capitalizeName(name);
     }
     
-    // Convert minus to negative
-    const actualMinusMinutes = totalMinusMinutes > 0 ? -totalMinusMinutes : 0;
+    // Calculate totals for sorting/calculations
+    const totalPlusMinutes = (plusHours * 60) + plusMinutes;
+    const totalMinusMinutes = (minusHours * 60) + minusMinutes;
+    const actualTotalMinus = totalMinusMinutes > 0 ? -totalMinusMinutes : 0;
+    const sum = totalPlusMinutes + actualTotalMinus;
     
-    // Calculate sum
-    const sum = totalPlusMinutes + actualMinusMinutes;
-    
-    // Create person object
+    // Create person object with separate hours and minutes
     const person = {
         id: personIdCounter++,
         name: name,
-        plus: totalPlusMinutes,
-        minus: actualMinusMinutes,
+        plusHours: plusHours,
+        plusMinutes: plusMinutes,
+        minusHours: minusHours,
+        minusMinutes: minusMinutes,
+        totalPlus: totalPlusMinutes,
+        totalMinus: actualTotalMinus,
         sum: sum
     };
     
@@ -251,7 +260,6 @@ function addPerson() {
     focusNameInput();
 }
 
-
 function updatePerson() {
     const nameInput = document.getElementById('personName');
     const plusHoursInput = document.getElementById('plusHours');
@@ -261,14 +269,10 @@ function updatePerson() {
     
     // Get values
     let name = nameInput.value.trim();
-    const plusHours = convertHoursToMinutes(plusHoursInput.value);
-    const plusMinutes = convertSimpleMinutes(plusMinutesInput.value);
-    const minusHours = convertHoursToMinutes(minusHoursInput.value);
-    const minusMinutes = convertSimpleMinutes(minusMinutesInput.value);
-    
-    // Calculate totals
-    const totalPlusMinutes = plusHours + plusMinutes;
-    const totalMinusMinutes = minusHours + minusMinutes;
+    const plusHours = parseInt(plusHoursInput.value) || 0;
+    const plusMinutes = parseInt(plusMinutesInput.value) || 0;
+    const minusHours = parseInt(minusHoursInput.value) || 0;
+    const minusMinutes = parseInt(minusMinutesInput.value) || 0;
     
     // Auto-generate name if empty
     if (!name) {
@@ -279,11 +283,11 @@ function updatePerson() {
         name = capitalizeName(name);
     }
     
-    // Convert minus to negative
-    const actualMinusMinutes = totalMinusMinutes > 0 ? -totalMinusMinutes : 0;
-    
-    // Calculate sum
-    const sum = totalPlusMinutes + actualMinusMinutes;
+    // Calculate totals for sorting/calculations
+    const totalPlusMinutes = (plusHours * 60) + plusMinutes;
+    const totalMinusMinutes = (minusHours * 60) + minusMinutes;
+    const actualTotalMinus = totalMinusMinutes > 0 ? -totalMinusMinutes : 0;
+    const sum = totalPlusMinutes + actualTotalMinus;
     
     // Find and update person
     const personIndex = people.findIndex(p => p.id === editingId);
@@ -291,8 +295,12 @@ function updatePerson() {
         people[personIndex] = {
             id: editingId,
             name: name,
-            plus: totalPlusMinutes,
-            minus: actualMinusMinutes,
+            plusHours: plusHours,
+            plusMinutes: plusMinutes,
+            minusHours: minusHours,
+            minusMinutes: minusMinutes,
+            totalPlus: totalPlusMinutes,
+            totalMinus: actualTotalMinus,
             sum: sum
         };
     }
@@ -312,33 +320,16 @@ function updatePerson() {
 }
 
 // ========== EDIT PERSON ==========
-function convertMinutesToHoursAndMinutes(totalMinutes) {
-    if (totalMinutes === 0) return { hours: '', minutes: '' };
-    
-    const absMinutes = Math.abs(totalMinutes);
-    const hours = Math.floor(absMinutes / 60);
-    const minutes = absMinutes % 60;
-    
-    return {
-        hours: hours > 0 ? hours.toString() : '',
-        minutes: minutes > 0 ? minutes.toString() : ''
-    };
-}
-
 function editPerson(personId) {
     const person = people.find(p => p.id === personId);
     if (!person) return;
     
-    // Convert plus minutes back to hours and minutes
-    const plusConverted = convertMinutesToHoursAndMinutes(person.plus);
-    const minusConverted = convertMinutesToHoursAndMinutes(Math.abs(person.minus));
-    
-    // Fill form with person data
+    // Fill form with person data 
     document.getElementById('personName').value = person.name;
-    document.getElementById('plusHours').value = plusConverted.hours;
-    document.getElementById('plusMinutes').value = plusConverted.minutes;
-    document.getElementById('minusHours').value = minusConverted.hours;
-    document.getElementById('minusMinutes').value = minusConverted.minutes;
+    document.getElementById('plusHours').value = person.plusHours || '';
+    document.getElementById('plusMinutes').value = person.plusMinutes || '';
+    document.getElementById('minusHours').value = person.minusHours || '';
+    document.getElementById('minusMinutes').value = person.minusMinutes || '';
     
     // Set editing state
     isEditing = true;
@@ -388,43 +379,6 @@ function deleteAllPeople() {
     }
 }
 
-// ========== RENDER TABLE ==========
-function renderTable() {
-    const tbody = document.getElementById('minutesTableBody');
-    
-    if (people.length === 0) {
-        tbody.innerHTML = `
-            <tr class="no-products">
-                <td colspan="5">Add your first person to start tracking minutes! ⏱️</td>
-            </tr>
-        `;
-        hideDeleteAllButton();
-        updateSortIndicators();
-        return;
-    }
-    
-    tbody.innerHTML = people.map((person, index) => `
-        <tr>
-            <td class="name-cell" onclick="editPerson(${person.id})" style="cursor: pointer;" title="Click to edit">
-                <strong>${person.name}</strong>
-            </td>
-            <td class="plus-cell">
-                ${person.plus > 0 ? '+' : ''}${formatMinutesToHours(person.plus)}<span class="min-suffix">min</span>
-            </td>
-            <td class="minus-cell">
-                ${formatMinutesToHours(person.minus)}<span class="min-suffix">min</span>
-            </td>
-            <td class="sum-cell ${person.sum >= 0 ? 'positive' : 'negative'}">
-                ${person.sum > 0 ? '+' : ''}${formatMinutesToHours(person.sum)}<span class="min-suffix">min</span>
-            </td>
-            <td>
-                <button class="delete-btn" onclick="deletePerson(${person.id})" title="Delete entry">
-                    🗑️
-                </button>
-            </td>
-        </tr>
-    `).join('');
-    
 // ========== TOTAL CALCULATION ==========
 function calculateTotal() {
     return people.reduce((total, person) => total + person.sum, 0);
@@ -439,6 +393,7 @@ function showTotal() {
         totalElement.id = 'totalDisplay';
         totalElement.className = 'total-display';
         
+
         const deleteAllBtn = document.getElementById('deleteAllBtn');
         if (deleteAllBtn) {
             deleteAllBtn.parentNode.insertBefore(totalElement, deleteAllBtn);
@@ -447,8 +402,14 @@ function showTotal() {
         }
     }
     
+    // Format total as hours and minutes
+    const absTotal = Math.abs(total);
+    const hours = Math.floor(absTotal / 60);
+    const minutes = absTotal % 60;
+    const isNegative = total < 0;
+    
     totalElement.innerHTML = `
-        <strong>TOTAL: <span class="${total >= 0 ? 'total-positive' : 'total-negative'}">${total > 0 ? '+' : ''}${formatMinutesToHours(total)}<span class="min-suffix-total">min</span></span></strong>
+        <strong>TOTAL: <span class="${total >= 0 ? 'total-positive' : 'total-negative'}">${formatHoursAndMinutes(hours, minutes, isNegative, true)}</span></strong>
     `;
 }
 
@@ -459,6 +420,44 @@ function hideTotal() {
     }
 }
 
+// ========== RENDER TABLE ==========
+function renderTable() {
+    const tbody = document.getElementById('minutesTableBody');
+    
+    if (people.length === 0) {
+        tbody.innerHTML = `
+            <tr class="no-products">
+                <td colspan="5">Add your first person to start tracking minutes! ⏱️</td>
+            </tr>
+        `;
+        hideDeleteAllButton();
+        hideTotal();
+        updateSortIndicators();
+        return;
+    }
+    
+    tbody.innerHTML = people.map((person, index) => `
+        <tr>
+            <td class="name-cell" onclick="editPerson(${person.id})" style="cursor: pointer;" title="Click to edit">
+                <strong>${person.name}</strong>
+            </td>
+            <td class="plus-cell">
+                ${person.totalPlus > 0 ? '+' : ''}${formatHoursAndMinutes(person.plusHours, person.plusMinutes)}
+            </td>
+            <td class="minus-cell">
+                ${formatHoursAndMinutes(person.minusHours, person.minusMinutes, true)}
+            </td>
+            <td class="sum-cell ${person.sum >= 0 ? 'positive' : 'negative'}">
+                ${person.sum > 0 ? '+' : ''}${formatHoursAndMinutes(Math.floor(Math.abs(person.sum) / 60), Math.abs(person.sum) % 60, person.sum < 0)}
+            </td>
+            <td>
+                <button class="delete-btn" onclick="deletePerson(${person.id})" title="Delete entry">
+                    🗑️
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
     showDeleteAllButton();
     showTotal();
     updateSortIndicators();
@@ -495,7 +494,6 @@ function capitalizeName(name) {
     ).join(' ');
 }
 
-
 function clearForm() {
     document.getElementById('personName').value = '';
     document.getElementById('plusHours').value = '';
@@ -510,30 +508,6 @@ function focusNameInput() {
         document.getElementById('personName').focus();
     }, 100);
 }
-
-// ========== FORMAT FUNCTIONS ==========
-function formatMinutesToHours(minutes) {
-    if (minutes === 0) return '0';
-    
-    const absMinutes = Math.abs(minutes);
-    const sign = minutes < 0 ? '-' : '';
-    
-    if (absMinutes < 60) {
-        return `${sign}${absMinutes}`;
-    }
-    
-    const hours = Math.floor(absMinutes / 60);
-    const remainingMinutes = absMinutes % 60;
-    
-    if (remainingMinutes === 0) {
-        return `${sign}${hours}t`;
-    }
-    
-    return `${sign}${hours}t ${remainingMinutes}`;
-}
-
-
-
 
 // ========== GLOBAL FUNCTIONS FOR ONCLICK ==========
 window.editPerson = editPerson;
