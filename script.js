@@ -181,6 +181,14 @@ function updateFloatingLabels() {
 // ========== FORMAT FUNCTIONS ==========
 function formatHoursAndMinutes(hours, minutes, isNegative = false, isTotal = false) {
     const sign = isNegative ? '-' : '';
+    
+    // added conversion for minutes to hours
+    if (minutes >= 60) {
+        const extraHours = Math.floor(minutes / 60);
+        hours += extraHours;
+        minutes = minutes % 60;
+    }
+    
     let result = '';
     
     if (hours > 0) {

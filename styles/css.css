@@ -52,11 +52,7 @@ header {
 header h1 {
     font-size: 2rem;
     margin: 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(135deg, #8B45FF, #FF6B9D);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #FF6B9D;
 }
 
 @media (max-width: 480px) {
