@@ -7,6 +7,14 @@ let editingId = null;
 let currentSortColumn = null;
 let currentSortDirection = 'asc';
 
+// Get current date string in DD.MM format
+function getCurrentDateString() {
+    const now = new Date();
+    const day = now.getDate().toString().padStart(2, '0');
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    return `${day}.${month}`;
+}
+
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', function() {
     loadFromLocalStorage();
@@ -36,6 +44,19 @@ function loadFromLocalStorage() {
             people = data.people || [];
             personIdCounter = data.personIdCounter || 1;
             autoNameCounter = data.autoNameCounter || 1;
+            
+            // Add dates to existing people who don't have them
+            let needsSave = false;
+            people.forEach(person => {
+                if (!person.dateAdded) {
+                    person.dateAdded = getCurrentDateString();
+                    needsSave = true;
+                }
+            });
+            
+            if (needsSave) {
+                saveToLocalStorage();
+            }
         }
     } catch (error) {
         console.log('Error loading from localStorage:', error);
@@ -255,7 +276,8 @@ function addPerson() {
         minusMinutes: minusMinutes,
         totalPlus: totalPlusMinutes,
         totalMinus: actualTotalMinus,
-        sum: sum
+        sum: sum,
+        dateAdded: getCurrentDateString()
     };
     
     // Add to array
@@ -300,6 +322,7 @@ function updatePerson() {
     // Find and update person
     const personIndex = people.findIndex(p => p.id === editingId);
     if (personIndex !== -1) {
+        const originalDate = people[personIndex].dateAdded;
         people[personIndex] = {
             id: editingId,
             name: name,
@@ -309,7 +332,8 @@ function updatePerson() {
             minusMinutes: minusMinutes,
             totalPlus: totalPlusMinutes,
             totalMinus: actualTotalMinus,
-            sum: sum
+            sum: sum,
+            dateAdded: originalDate || getCurrentDateString()
         };
     }
     
@@ -447,7 +471,10 @@ function renderTable() {
     tbody.innerHTML = people.map((person, index) => `
         <tr>
             <td class="name-cell" onclick="editPerson(${person.id})" style="cursor: pointer;" title="Click to edit">
-                <strong>${person.name}</strong>
+                <div class="name-wrapper">
+                    <strong>${person.name}</strong>
+                    ${person.dateAdded ? `<div class="date-added">${person.dateAdded}</div>` : ''}
+                </div>
             </td>
             <td class="plus-cell">
                 ${person.totalPlus > 0 ? '+' : ''}${formatHoursAndMinutes(person.plusHours, person.plusMinutes)}
