@@ -117,7 +117,8 @@
             }
         };
         
-
+        // Add CSS styles for date display
+        addDateStyles();
         
         // Trigger initial load with date functionality
         loadFromLocalStorage();
@@ -131,6 +132,38 @@
         return `${day}.${month}`;
     }
     
-
+    function addDateStyles() {
+        if (document.getElementById('date-tracker-styles')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'date-tracker-styles';
+        style.textContent = `
+            .name-wrapper {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+            }
+            
+            .date-added {
+                font-size: 10px;
+                color: #B8B8D1;
+                font-weight: 400;
+                opacity: 0.8;
+                letter-spacing: 0.5px;
+            }
+            
+            @media (max-width: 400px) {
+                .date-added {
+                    font-size: 9px;
+                }
+                
+                .name-wrapper {
+                    gap: 1px;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
     
 })();
