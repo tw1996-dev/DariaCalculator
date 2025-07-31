@@ -117,8 +117,7 @@
             }
         };
         
-        // Add CSS styles for date display
-        addDateStyles();
+
         
         // Trigger initial load with date functionality
         loadFromLocalStorage();

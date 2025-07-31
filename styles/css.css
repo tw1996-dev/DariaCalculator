@@ -378,7 +378,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 
-css/* DATE TRACKER STYLES */
+/* DATE TRACKER STYLES */
 .name-wrapper {
     display: flex;
     flex-direction: column;
